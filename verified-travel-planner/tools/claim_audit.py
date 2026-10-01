@@ -53,7 +53,7 @@ source_audit.py 审的是**标注纪律**（徽章在册、时戳在场、等级
 ----
     python tools/claim_audit.py --facts 路书_X.json --itinerary itinerary_X.json
                                 [--nearby nearby_X.json ...]
-                                [--trace 留痕_X.json ...] [--snapshot 快照.json]
+                                [--trace 留痕_X.json ...] [--snapshot 快照_X.json ...]
                                 [--json]
     `--trace` 与 `--snapshot` 都按**形状**自动识别（trace 形 {calls[]} /
     快照形 {provenance, routes[], raw_calls[]}），给哪个都行、给错也不丢。
@@ -449,8 +449,9 @@ def main():
     ap.add_argument('--trace', action='append', default=[],
                     help='route / search-places / nearby-spots --trace 落下的留痕'
                          '（可多次；形状自动识别）')
-    ap.add_argument('--snapshot',
-                    help='amap-snapshot 快照（形状自动识别，给 trace 文件也不会丢）')
+    ap.add_argument('--snapshot', action='append', default=[],
+                    help='amap-snapshot 快照（可多次；形状自动识别，'
+                         '给 trace 文件也不会丢）')
     ap.add_argument('--json', action='store_true', help='输出机器可读 JSON')
     a = ap.parse_args()
 
@@ -460,18 +461,27 @@ def main():
         return 1
     ev = Evidence()
     loaded = 0
-    if a.itinerary:
-        load_itinerary(Path(a.itinerary), ev)
-        loaded += 1
-    for n in a.nearby:
-        load_nearby(Path(n), ev)
-        loaded += 1
-    for t in a.trace:
-        load_evidence(Path(t), ev)
-        loaded += 1
-    if a.snapshot:
-        load_evidence(Path(a.snapshot), ev)
-        loaded += 1
+    # 留痕文件现在由 ship.py 按命名约定**自动发现**，所以读不动的那份必须
+    # 指名道姓地报出来——裸 traceback 会让人对着七八个文件猜是哪个坏了。
+    try:
+        if a.itinerary:
+            load_itinerary(Path(a.itinerary), ev)
+            loaded += 1
+        for n in a.nearby:
+            load_nearby(Path(n), ev)
+            loaded += 1
+        for t in a.trace:
+            load_evidence(Path(t), ev)
+            loaded += 1
+        for s in a.snapshot:
+            load_evidence(Path(s), ev)
+            loaded += 1
+    except OSError as exc:
+        print('留痕文件读不了：%s' % exc)
+        return 1
+    except json.JSONDecodeError as exc:
+        print('留痕文件不是合法 JSON（%s）——修好它，或把不该被发现的文件移走' % exc)
+        return 1
     if loaded == 0:
         print('没有任何留痕文件（--itinerary/--nearby/--trace/--snapshot 至少给一个）')
         return 1

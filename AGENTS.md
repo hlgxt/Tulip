@@ -53,7 +53,7 @@ D:\旅游\                          ← 唯一真身（各客户端经目录联�
 
 `tools/` 关键文件：`travel_planner.py`（★统一 CLI，15 命令）、`render_html.py`（事实源 JSON → 单文件 HTML，
 加 `--compact` 出精简执行版）、`consistency.py`（版式校验）、`ludbook_check.py`（30 项交付自查）、
-`freshness.py`（时效体检：动态数字到出发日还新不新）、`source_audit.py`（源核验：徽章标注纪律闸门，源核验 8 条规则）、`claim_audit.py`（声明↔留痕比对闸门：实采值必须如实进路书，P1 v1）、`compact_draft.py`（compact 半自动草稿：只出草案副产物永不写事实源，约束段不进删除通道）、`social_notes.py`（社会情报归一化 + 增量合并 + 交叉印证）、
+`freshness.py`（时效体检：动态数字到出发日还新不新）、`source_audit.py`（源核验：徽章标注纪律闸门，源核验 8 条规则）、`claim_audit.py`（声明↔留痕比对闸门：声明为实采的段值必须如实进路书，P1 v2，覆盖段时长/距离/票价）、`compact_draft.py`（compact 半自动草稿：只出草案副产物永不写事实源，约束段不进删除通道）、`social_notes.py`（社会情报归一化 + 增量合并 + 交叉印证）、
 `social_source.py`（社媒采集渠道能力矩阵 + 采集计划）、`social_login.py`（AUTH 档登录态探针）、
 `cdp_read.py`（CDP 只读读取器，穿透 Shadow DOM 读评论）、
 `validate_skill.py`、`shoot.py`、`set_amap_key.py`、`doctor.py`、`desource.py`、
@@ -84,6 +84,10 @@ python tools/travel_planner.py search-places --keywords "宽窄巷子" --city �
 
 # 采集坐标+路线+周边（需 key；起终点必须是【城市级】）
 python tools/travel_planner.py amap-snapshot --input 输入.json --output 快照.json
+
+# 点对点距离/时长/过路费·票价（需 key；【POI 级】，与上条城市级通道别混用）
+# 这是唯一能产出驾车距离/票价留痕的命令——不跑它，那两类数就永远无留痕可对
+python tools/travel_planner.py route --input 路段.json --output 结果.json --trace 留痕.json
 
 # 可行性检查（排不通 → 退出码 2）
 python tools/travel_planner.py evaluate --input 行程.json
@@ -190,16 +194,21 @@ base64 都逐字节一致。骨架每次 CSS 变更都会换基线——改骨�
   `references/browser-use.md`（浏览器核验能力与两个陷阱）、
   `references/social-sources.md`（社媒渠道五档矩阵 + 五条扩展路径 + 合规/反爬/解析）、
   `references/social-login.md`（用户授权登录：三种强度 / 实测 / 账号风险）。
-- **工程保障已落地（2026-09-28）**：`tests/`（87 条测试，标准库 unittest）、
+- **工程保障已落地（2026-09-28）**：`tests/`（88 条测试，标准库 unittest）、
   `tools/ship.py` 一键回归（七道闸门 + 渲染基线，FAIL 退出码 2）、
   CI `.github/workflows/gates.yml`（gates + gitleaks）。
-- **P1 来源留痕 v1（2026-09-30）**：高德采集默认留痕（`call_log` → 快照内嵌
-  `raw_calls`；`search-places`/`nearby-spots` 可 `--trace`）；新闸门
-  `tools/claim_audit.py` 把实采值拿回事实源全文里找，实采 16 写成 15 即 FAIL。
-  边界：证明「声明与采集一致」，不证明「采集与世界一致」；距离/票价类留痕未覆盖。
+- **P1 来源留痕 v2（2026-10-01）**：v1（2026-09-30）建了留痕与比对，但**方向类数值
+  采不出来也留不了痕**——`--trace` 只挂在 `search-places`/`nearby-spots` 上，两者都不调
+  方向接口，事实源里的「9.5 公里 / 过路费 ¥17」因此永远无留痕可对。v2 补齐三层：
+  ① 新增 `route` 子命令（点对点，POI 级，走 `amap-snapshot` 的城市级门禁之外），
+  驾车/步行距离、过路费、公交票价首次可采可留痕；② `claim_audit` 认 trace 形留痕
+  （此前当 `--snapshot` 传会命 W3 被**静默忽略**）、把 `¥N` 票价纳入回查（此前正则
+  只认「N 元」，票价整类隐形）；③ itinerary 用机器可读的 `_实采字段` 声明哪些字段
+  受 C1 约束（**缺省 = 段时长，老文件零影响**），声明了却对不上即 FAIL。
+  边界：证明「声明与采集一致」，不证明「采集与世界一致」；**门票价（官网/OTA）不在
+  本链路能力内**——它要的是「网页正文摘录」通道，属下一个独立特性。
 - **待办**：`examples/` 更多样例（现三个已覆盖「完整交付链路」「渲染基线」
-  「路线/备选/顺道点」三类用途，缺如**多城串联 / 纯过境**）；P1 的 v2
-  （留痕面扩到驾车距离/票价，见 WORKSPACE.md 待办）。
+  「路线/备选/顺道点」三类用途，缺如**多城串联 / 纯过境**）。
 
 ---
 

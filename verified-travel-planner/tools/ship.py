@@ -13,8 +13,8 @@
   4  source_audit        每份事实源的证据标注纪律
   5  compact_check       每份事实源的双版本质量
   6  evaluate            每份 itinerary 的确定性可行性
-  7  claim_audit         声明↔留痕比对：实采值必须如实进路书
-                         （P1 来源留痕 v1；无留痕文件时如实跳过，不静默）
+  7  claim_audit         声明↔留痕比对：声明为实采的段值必须如实进路书
+                         （P1 来源留痕 v2；无留痕文件时如实跳过，不静默）
   8  渲染复现            由事实源重渲染，**与既有 HTML 逐字节比对**
                          （渲染器偷偷改了样式，这一条会先炸——比指纹更狠）
 
@@ -271,19 +271,28 @@ def main(argv=None) -> int:
         else:
             emit('  [ -- ] %-28s 无 itinerary' % 'evaluate 可行性')
 
-        # 声明↔留痕比对（P1 v1）：有留痕就比对，没有就明说跳过——不静默。
+        # 声明↔留痕比对（P1 v2）：有留痕就比对，没有就明说跳过——不静默。
+        # 证据文件按**命名约定**发现（三处来源各自成形）：
+        #   itinerary_<城市>.json  行程层（`_实采字段` 声明哪些字段受 C1 约束）
+        #   nearby_<城市>*.json    周边采集（provider=amap）
+        #   留痕_<城市>*.json       route / search-places --trace 落盘（trace 形）
+        #   快照_<城市>*.json       amap-snapshot（快照形）
+        # 两种形状由 claim_audit 自己嗅探——传错 flag 也不会被静默丢掉。
         ca = ['tools/claim_audit.py', '--facts', str(ex['facts'])]
         has_evidence = ex['itinerary'].exists()
         if has_evidence:
             ca += ['--itinerary', str(ex['itinerary'])]
-        nearby = sorted(ex['facts'].parent.glob('nearby_%s*.json' % ex['city']))
-        for n in nearby:
-            ca += ['--nearby', str(n)]
-            has_evidence = True
+        for pattern, flag in (('nearby_%s*.json', '--nearby'),
+                              ('留痕_%s*.json', '--trace'),
+                              ('快照_%s*.json', '--snapshot')):
+            found = sorted(ex['facts'].parent.glob(pattern % ex['city']))
+            for path in found:
+                ca += [flag, str(path)]
+                has_evidence = True
         if has_evidence:
             r.run('claim_audit 声明比对', ca)
         else:
-            emit('  [ -- ] %-28s 无留痕文件（itinerary/nearby 均缺）'
+            emit('  [ -- ] %-28s 无留痕文件（itinerary/nearby/留痕/快照 均缺）'
                  % 'claim_audit 声明比对')
 
         if not args.quick:

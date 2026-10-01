@@ -319,6 +319,31 @@ class TestClaimAuditV2(unittest.TestCase):
         self.assertEqual(code, 0, out)
         self.assertIn('W5', out)
 
+    def test_multiple_evidence_files_are_all_loaded(self):
+        # ship.py 按 glob 逐个传留痕文件。参数若是单值，只有最后一个生效——
+        # 多份留痕会被**静默丢掉**，那是本工具最不该有的形状。
+        # 两份各带一半证据：都加载了 C2 才归零，丢一份就会挂出 9.5公里。
+        first = _trace(_trace_call(tolls="0"))
+        second = _trace(_trace_call(distance="1", duration="60", tolls="17"))
+        with tempfile.TemporaryDirectory() as td:
+            td = Path(td)
+            fp, ip = td / 'facts.json', td / 'itinerary.json'
+            fp.write_text(json.dumps(self._facts(self.GOOD), ensure_ascii=False),
+                          encoding='utf-8')
+            ip.write_text(json.dumps(_itinerary_v2(), ensure_ascii=False),
+                          encoding='utf-8')
+            args = [sys.executable, str(AUDIT), '--facts', str(fp),
+                    '--itinerary', str(ip)]
+            for i, blob in enumerate((first, second)):
+                tp = td / ('s%d.json' % i)
+                tp.write_text(json.dumps(blob, ensure_ascii=False), encoding='utf-8')
+                args += ['--snapshot', str(tp)]
+            proc = subprocess.run(args, capture_output=True, timeout=60)
+            out = proc.stdout.decode('utf-8')
+        self.assertEqual(proc.returncode, 0, out)
+        c2_lines = [l for l in out.splitlines() if 'C2 声明回查' in l]
+        self.assertIn('0 个', c2_lines[0], out)
+
 
 if __name__ == '__main__':
     unittest.main()
