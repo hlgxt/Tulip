@@ -344,6 +344,31 @@ class TestClaimAuditV2(unittest.TestCase):
         c2_lines = [l for l in out.splitlines() if 'C2 声明回查' in l]
         self.assertIn('0 个', c2_lines[0], out)
 
+    def test_transit_trace_minutes_bridge_is_harvested(self):
+        # 公交走 `route.transits[]`，与驾车的 `route.paths[]` 是两个形状；
+        # 而原始体里时长是**秒**（"duration":"720"），路书写的是「12 分钟」。
+        # 秒→分的换算只有这两个分支做得了——raw_texts 给不出 "12"。
+        #
+        # ⚠️ 这条**故意不声明 duration_minutes**：一旦声明，池子里就会有
+        # 声明值 "12"，测试立刻变成空转（本文件真踩过这个坑，是变异测试
+        # 抓出来的——所以声明面只留 fare_cny）。
+        transit_trace = {
+            "provider": "amap", "generated_at": "2026-10-01T10:00:00+08:00",
+            "call_count": 1, "calls": [{
+                "endpoint": "/v3/direction/transit/integrated",
+                "params": {"city": "上海"},
+                "fetched_at": "2026-10-01T02:00:00+00:00",
+                "response": {"status": "1", "route": {"transits": [
+                    {"duration": "720", "distance": "5783",
+                     "walking_distance": "811", "cost": "3"}]}}}]}
+        facts = self._facts("地铁 12 分钟 / 约 ¥3（高德路线，2026-10-01 查）[A]")
+        itinerary = _itinerary_v2(minutes=None, distance=None, fare=3,
+                                  fields=("fare_cny",))
+        code, out = self._run(facts, itinerary, transit_trace)
+        self.assertEqual(code, 0, out)
+        c2_lines = [l for l in out.splitlines() if 'C2 声明回查' in l]
+        self.assertIn('0 个', c2_lines[0], out)
+
 
 if __name__ == '__main__':
     unittest.main()
