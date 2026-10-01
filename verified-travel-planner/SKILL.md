@@ -874,7 +874,7 @@ verified-travel-planner/
 │       ├── credentials.py      ← 凭据读取（环境变量 → 凭据文件 → macOS 钥匙串）
 │       └── timeutil.py / models.py
 ├── tools/
-│   ├── travel_planner.py       ← ★ 统一命令行入口（14 个命令，先看它的 --help）
+│   ├── travel_planner.py       ← ★ 统一命令行入口（15 个命令，先看它的 --help）
 │   ├── set_amap_key.py         ← 高德 key 配置（跨平台；上游脚本仅支持 macOS）
 │   ├── doctor.py               ← 能力体检（能力先测后报；等价于 `travel_planner.py doctor`）
 │   ├── render_html.py          ← 渲染器（事实源 JSON → 路书 HTML；--compact 出精简版）
@@ -899,7 +899,7 @@ verified-travel-planner/
 
 **渐进加载**：只读当前任务需要的 reference，不要一次全读。
 
-**先看命令入口**：`python "<SKILL_ROOT>/tools/travel_planner.py" --help` 列出全部 14 个命令。
+**先看命令入口**：`python "<SKILL_ROOT>/tools/travel_planner.py" --help` 列出全部 15 个命令。
 开工前先跑 `doctor`——能力先测后报，先弄清这台机器能验到什么程度，
 再决定哪些项取 `[A]`、哪些必须降级 `[D]`。
 

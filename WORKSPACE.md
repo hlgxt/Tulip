@@ -77,8 +77,9 @@ D:\旅游\
 │   │   ├── credentials.py          ← 凭证三级回退（跨平台改写）
 │   │   └── ...
 │   ├── tools\                      ← 命令行工具
-│   │   ├── travel_planner.py       ← ★ 统一 CLI（14 个命令）
+│   │   ├── travel_planner.py       ← ★ 统一 CLI（15 个命令）
 │   │   │                             含 weather：实况 + 4 天预报 + 「哪天超出窗口」
+│   │   │                             含 route：点对点距离/时长/过路费·票价 + 逐段留痕
 │   │   ├── render_html.py          ← 渲染器（事实源 JSON → 路书 HTML，数据模板分离）
 │   │   │                             同一命令加 --compact 出「精简执行版」
 │   │   ├── consistency.py          ← 版式一致性校验（以基准骨架为真值）
@@ -142,7 +143,7 @@ pip install tzdata -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mir
 **常用命令**（在 `verified-travel-planner\` 下执行）：
 
 ```bash
-# 看全部 14 个命令
+# 看全部 15 个命令
 python tools\travel_planner.py --help
 
 # 环境体检（自带客户端要显式指定，否则会猜错）
@@ -191,7 +192,7 @@ python tools\travel_planner.py weather --city 中山市 --start 2026-09-28 --end
 **已完成（A 级全落地）**
 
 - 融合双核机制（见好交付质量 + 实证派数据纪律）
-- 检查引擎 14 模块迁移 + 统一 CLI 14 命令
+- 检查引擎 14 模块迁移 + 统一 CLI 15 命令
 - 渲染管线：事实源 JSON → 单文件 HTML（配图 base64 内联，断网可开）
 - 合规：LICENSE + THIRD_PARTY_NOTICES（保留两个上游版权声明）
 - 文档 9 章契约（`references/data-contracts.md`）
@@ -311,7 +312,7 @@ python tools\travel_planner.py weather --city 中山市 --start 2026-09-28 --end
   已修（门票降 `[D]` 并补官方渠道出路、送礼段补时戳、孤儿来源挂到日落活动）。  
   **注意：这 5 处都不是数字错，是把单源信息标成了够不着的等级**——正是「标注纪律」与  
   「事实正确」的区别。负向样本 6 类违规全部命中；退出码 0/2 三态验证正确。
-- [x] **C 级 · 工程保障（2026-09-28 落地）**——自动化测试套件 `tests/`（72 条测试，标准库  
+- [x] **C 级 · 工程保障（2026-09-28 落地）**——自动化测试套件 `tests/`（77 条测试，标准库  
   unittest）、`tools/ship.py` 一键回归（七道闸门 + 渲染基线，FAIL 退出码 2）、  
   CI `.github/workflows/gates.yml`（gates 跑 `ship.py` + `gitleaks` 密钥扫描）。  
   命令：`python verified-travel-planner/tools/ship.py`

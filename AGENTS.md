@@ -51,7 +51,7 @@ D:\旅游\                          ← 唯一真身（各客户端经目录联�
 └── 验收记录\                     ← 🔒 私有，不入库：高德采集入参出参 + 迁移/联接脚本 + 验收报告
 ```
 
-`tools/` 关键文件：`travel_planner.py`（★统一 CLI，14 命令）、`render_html.py`（事实源 JSON → 单文件 HTML，
+`tools/` 关键文件：`travel_planner.py`（★统一 CLI，15 命令）、`render_html.py`（事实源 JSON → 单文件 HTML，
 加 `--compact` 出精简执行版）、`consistency.py`（版式校验）、`ludbook_check.py`（30 项交付自查）、
 `freshness.py`（时效体检：动态数字到出发日还新不新）、`source_audit.py`（源核验：徽章标注纪律闸门，源核验 8 条规则）、`claim_audit.py`（声明↔留痕比对闸门：实采值必须如实进路书，P1 v1）、`compact_draft.py`（compact 半自动草稿：只出草案副产物永不写事实源，约束段不进删除通道）、`social_notes.py`（社会情报归一化 + 增量合并 + 交叉印证）、
 `social_source.py`（社媒采集渠道能力矩阵 + 采集计划）、`social_login.py`（AUTH 档登录态探针）、
@@ -73,7 +73,7 @@ D:\旅游\                          ← 唯一真身（各客户端经目录联�
 ```bash
 cd verified-travel-planner
 
-# 全部 14 个命令
+# 全部 15 个命令
 python tools/travel_planner.py --help
 
 # 环境体检（客户端参数必带——不带会自己猜，装了几个客户端时猜不准）
@@ -171,7 +171,7 @@ base64 都逐字节一致。骨架每次 CSS 变更都会换基线——改骨�
 
 ## 当前状态与待办
 
-- **A 级全落地**：双核融合、引擎 14 模块、统一 CLI 14 命令、渲染管线（配图 base64 内联、断网可开）、
+- **A 级全落地**：双核融合、引擎 14 模块、统一 CLI 15 命令、渲染管线（配图 base64 内联、断网可开）、
   MIT 合规、契约文档 9 章。
 - **高德 key 已通过 4 步验收**：`credential-status` CONFIGURED → `doctor --live` 真连成功 →
   `search-places` 返回真实 POI → `amap-snapshot` 采集成功（`provenance.live_data = true`）。
@@ -190,7 +190,7 @@ base64 都逐字节一致。骨架每次 CSS 变更都会换基线——改骨�
   `references/browser-use.md`（浏览器核验能力与两个陷阱）、
   `references/social-sources.md`（社媒渠道五档矩阵 + 五条扩展路径 + 合规/反爬/解析）、
   `references/social-login.md`（用户授权登录：三种强度 / 实测 / 账号风险）。
-- **工程保障已落地（2026-09-28）**：`tests/`（72 条测试，标准库 unittest）、
+- **工程保障已落地（2026-09-28）**：`tests/`（77 条测试，标准库 unittest）、
   `tools/ship.py` 一键回归（七道闸门 + 渲染基线，FAIL 退出码 2）、
   CI `.github/workflows/gates.yml`（gates + gitleaks）。
 - **P1 来源留痕 v1（2026-09-30）**：高德采集默认留痕（`call_log` → 快照内嵌
