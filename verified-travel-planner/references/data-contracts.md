@@ -692,6 +692,7 @@ OTA 对未登录访客**完全不显示房价**，对已登录访客显示按等
 {
   "budget_cny": 1000,
   "timezone": "Asia/Shanghai",
+  "_实采字段": ["duration_minutes", "distance_meters", "fare_cny"],
   "constraints": {
     "max_daily_minutes": 720,
     "max_walking_km_per_day": 10,
@@ -718,6 +719,8 @@ OTA 对未登录访客**完全不显示房价**，对已登录访客显示按等
       "from_id": "place-1",
       "to_id": "place-2",
       "duration_minutes": 40,
+      "distance_meters": 9500,
+      "fare_cny": 17,
       "buffer_minutes": 20,
       "estimated_cost": 6
     }
@@ -734,7 +737,26 @@ OTA 对未登录访客**完全不显示房价**，对已登录访客显示按等
 | `opening_time` / `closing_time` / `last_entry_time` | `HH:MM`。用于校验是否撞闭馆 / 停止入场 |
 | `estimated_cost` | **纯数字**，不带 `¥` 与千分位逗号——带任何一项都会报 `UNREADABLE_NUMBER` |
 | `duration_minutes` | 交通段实际耗时，**必须来自地图调用**，不是估的 |
+| `distance_meters` | 可选。该段路线距离（米），来自 `route` 命令的实采值 |
+| `fare_cny` | 可选。该段票价/过路费（元）：驾车取 `tolls`、公交取 `cost` |
 | `source_checked_at` | 动态数据必填，用于时效判定 |
+
+### `_实采字段` —— 声明「哪些字段是实采的」
+
+`claim_audit.py`（声明↔留痕比对闸门）靠它决定 C1 的**覆盖面**：
+
+- 列出的字段，其段值必须逐个出现在事实源全文中，**找不到即 FAIL（退出码 2）**；
+- **缺省 = `["duration_minutes"]`**，与 v1 行为逐字一致——老文件零影响；
+- 认得的字段只有 `duration_minutes` / `distance_meters` / `fare_cny`，
+  拼错的字段名会出 `W7` 警告而**不会**被静默当成已声明。
+
+> **为什么要有这个声明面**：查过一段路**不等于**那段必须进路书（查了不用是正常事，
+> 顺道候选就是只列不判断）。如果拿留痕池去反推「都该出现在路书里」，闸门立刻开始误伤。
+> 所以只有**显式声明为实采**的字段才受约束——这也是「宁缺毋滥：每条 FAIL 都必须钉得住」。
+
+> ⚠️ **边界**：它比对的是「声明与留痕一致」，**不比对「采集与世界一致」**。
+> 另外**门票价不在这条链路里**——官网/OTA 的票价结构性落在高德能力之外，
+> 要覆盖得先有「网页正文摘录」通道；本闸门不会、也不该替它背书。
 
 ### 时区
 
